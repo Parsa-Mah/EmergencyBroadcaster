@@ -1,11 +1,17 @@
+import os
+from dotenv import load_dotenv
 
 from sqlalchemy import create_engine, String, Integer, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from tabulate import tabulate
 
+load_dotenv()  # Take environment variables from .env.
+
+database_url = os.getenv('DATABASE_URL')
+
 # 1. Setup the Database Connection (The Engine)
 # Replace user, password, and dbname with your actual credentials
-DATABASE_URL = "postgresql+psycopg2://postgres:1234@localhost:5432/postgres"
+DATABASE_URL = database_url
 engine = create_engine(DATABASE_URL)
 
 # 2. Define the Base Class (The foundation for our models)
