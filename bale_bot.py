@@ -1,10 +1,18 @@
+
+import os
+from dotenv import load_dotenv
+
 import telebot
 from telebot import apihelper
 import json
 import os
 
+load_dotenv()  # Take environment variables from .env.
+
+bot_token = os.getenv('BOT_TOKEN')
+
 # 1. SETUP: Put your BALE bot token here
-BOT_TOKEN = 'YOUR_BALE_BOT_TOKEN'
+BOT_TOKEN = bot_token
 
 # 2. CRITICAL STEP: Override the server URL to point to Baleh
 # This is what makes a "Telegram" library work with Baleh.
@@ -64,7 +72,10 @@ def handle_start(message):
 def handle_broadcast(message):
     # SECURITY: Replace '12345678' with your own numeric ID to prevent others from using this
     # You can see your ID printed in the console when you use /start
-    ADMIN_ID = 12345678
+    try:
+        ADMIN_ID = int(os.getenv('ADMIN_ID'))
+    except ValueError as e:
+        print(f"Error: {e}")
 
     if message.chat.id != ADMIN_ID:
         bot.reply_to(message, "You are not authorized to broadcast.")
