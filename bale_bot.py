@@ -84,6 +84,21 @@ def handle_start(message):
         bot.reply_to(message, "You are already on the list.")
 
 
+@bot.message_handler(commands=['addinfo'])
+def handle_add_info(message):
+    user_id = message.chat.id
+    first_name = message.from_user.first_name
+
+    is_updated = True
+
+    if is_updated:
+        bot.reply_to(message, f"""Hello {first_name}!
+        Do you want to change your first name?""")
+        print(f"New User: {user_id} - {first_name}")
+    else:
+        bot.reply_to(message, "You are already on the list.")
+
+
 @bot.message_handler(commands=['broadcast'])
 def handle_broadcast(message):
     # SECURITY: Replace '12345678' with your own numeric ID to prevent others from using this
