@@ -1,6 +1,12 @@
 
+from models import User
+
 import os
 from dotenv import load_dotenv
+
+from sqlalchemy import update, create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import telebot
 from telebot import apihelper
@@ -21,26 +27,36 @@ apihelper.API_URL = "https://tapi.bale.ai/bot{0}/{1}"
 # Initialize the bot
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# File to store user IDs (simple database)
-DB_FILE = "bale_users.json"
+database_url = os.getenv('DATABASE_URL')
+DATABASE_URL = database_url
 
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
 
 # --- DATABASE FUNCTIONS ---
-def add_user(user_id):
-    """Saves the user ID to a file if not already present."""
-    if not os.path.exists(DB_FILE):
-        with open(DB_FILE, 'w') as f:
-            json.dump([], f)
+def add_user(user_id: int, first_name: str = None, username: str = None):
+    """
+    Registers a user in Postgres if they don't exist.
+    Returns True if a new user was created, False if they already existed.
+    """
+    with SessionLocal() as session:
+        with session.begin():
+            # 1. Check if user exists using primary key
+            user = session.get(User, user_id)
 
-    with open(DB_FILE, 'r') as f:
-        users = json.load(f)
+            if not user:
+                # 2. Create new user instance
+                new_user = User(
+                    user_id=user_id,
+                    first_name=first_name,
+                    username=username,
+                    role="employee",  # Default role
+                    status="pending_approval"  # Default status
+                )
+                session.add(new_user)
+                return True
 
-    if user_id not in users:
-        users.append(user_id)
-        with open(DB_FILE, 'w') as f:
-            json.dump(users, f)
-        return True
-    return False
+            return False  # User already exists
 
 
 def get_all_users():
@@ -101,6 +117,23 @@ def handle_broadcast(message):
 
     bot.reply_to(message, f"Broadcast complete. Sent to {count} users.")
 
+
+async def update_activity(session: AsyncSession, user_id: int):
+    """
+    Updates the last_seen column.
+    We use 'update' specifically for performance instead of loading the whole object.
+    """
+    try:
+        stmt = (
+            update(User)
+            .where(User.user_id == user_id)
+            .values(last_seen=func.now())
+        )
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        await session.rollback()
+        print(f"Error updating activity for {user_id}: {e}")
 
 # --- MAIN LOOP ---
 print("Bale Bot Started...")
