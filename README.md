@@ -298,7 +298,7 @@ For issues specific to:
 
 ## License
 
-[Add your license here]
+Refer to License File in the project
 
 ## Contributing
 
