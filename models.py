@@ -71,6 +71,7 @@ class Issue(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # The actual message content describing the issue
+    title: Mapped[str] = mapped_column(String(255))
     message: Mapped[str] = mapped_column(Text)
 
     # Who created this issue (admin user_id)
